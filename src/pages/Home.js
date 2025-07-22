@@ -1,72 +1,177 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { cityService, userService } from '../services/api';
 
 const Home = () => {
-  const { currentUser, isAdmin } = useAuth();
+  const { user } = useAuth();
+  const [stats, setStats] = useState({
+    cities: 0,
+    users: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (user) {
+        try {
+          setLoading(true);
+          const citiesResponse = await cityService.getAllCities(1, 1);
+          
+          let usersCount = 0;
+          if (user.role === 'admin') {
+            const usersResponse = await userService.getAllUsers();
+            usersCount = usersResponse.data.length || 0;
+          }
+          
+          setStats({
+            cities: citiesResponse.data.total || 0,
+            users: usersCount,
+          });
+        } catch (error) {
+          console.error('Error fetching stats:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    
+    fetchStats();
+  }, [user]);
+  
+  // Format date for activity items
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+  
+  // Mock activity data (in a real app, this would come from the API)
+  const activityItems = [
+    {
+      id: 1,
+      title: 'New city added',
+      description: 'Paris was added to the database',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+    },
+    {
+      id: 2,
+      title: 'City updated',
+      description: 'New York description was updated',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+    },
+    {
+      id: 3,
+      title: 'User logged in',
+      description: 'Admin user logged in',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+    },
+  ];
 
   return (
-    <div className="home-container">
-      <div className="hero-section">
-        <h1>NestJS PostgreSQL CRUD API</h1>
-        <p>A full-featured REST API with JWT authentication, refresh tokens, and RBAC</p>
-        
-        {!currentUser ? (
-          <div className="cta-buttons">
-            <Link to="/login" className="btn btn-primary">
+    <>
+      {!user ? (
+        <div className="auth-container">
+          <div className="auth-card">
+            <h2>Welcome to NestJS CRUD</h2>
+            <p className="text-center">Please log in to access the dashboard</p>
+            <Link to="/login" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
               Login
             </Link>
           </div>
-        ) : (
-          <div className="welcome-section">
-            <h2>Welcome, {currentUser.firstName}!</h2>
-            <p>You are logged in as: {currentUser.role}</p>
-            
-            <div className="feature-cards">
-              <div className="feature-card">
-                <h3>Cities Management</h3>
-                <p>Create, view, update, and delete cities</p>
-                <Link to="/cities" className="btn btn-secondary">
-                  Manage Cities
-                </Link>
+        </div>
+      ) : (
+        <div className="home-container">
+          <h2>Dashboard</h2>
+          <p>Welcome back, {user.firstName}! Here's an overview of your data.</p>
+          
+          {loading ? (
+            <div className="loader-container">
+              <div className="loader"></div>
+            </div>
+          ) : (
+            <>
+              <div className="dashboard">
+                <div className="stat-card">
+                  <h3>Total Cities</h3>
+                  <div className="stat-value">{stats.cities}</div>
+                  <div className="stat-change positive">+2 this week</div>
+                </div>
+                
+                {user.role === 'admin' && (
+                  <div className="stat-card">
+                    <h3>Total Users</h3>
+                    <div className="stat-value">{stats.users}</div>
+                    <div className="stat-change positive">+1 this week</div>
+                  </div>
+                )}
+                
+                <div className="stat-card">
+                  <h3>API Status</h3>
+                  <div className="stat-value" style={{ color: '#2ecc71', fontSize: '1.5rem' }}>Online</div>
+                  <div className="stat-change">100% uptime</div>
+                </div>
               </div>
               
-              {isAdmin && (
-                <div className="feature-card">
-                  <h3>User Management</h3>
-                  <p>View and manage users (Admin only)</p>
-                  <Link to="/users" className="btn btn-secondary">
-                    Manage Users
+              <div className="card-header">
+                <h3>Quick Actions</h3>
+              </div>
+              
+              <div className="dashboard">
+                <div className="card">
+                  <h4>Cities Management</h4>
+                  <p>Create, view, update, and delete cities in the database.</p>
+                  <Link to="/cities" className="btn btn-primary">
+                    Manage Cities
                   </Link>
                 </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      
-      <div className="features-section">
-        <h2>Features</h2>
-        <div className="features-grid">
-          <div className="feature">
-            <h3>🔐 JWT Authentication</h3>
-            <p>Secure access and refresh tokens</p>
-          </div>
-          <div className="feature">
-            <h3>🛡️ Role-Based Access</h3>
-            <p>Admin and User role separation</p>
-          </div>
-          <div className="feature">
-            <h3>📋 Pagination</h3>
-            <p>Efficient data loading with pagination</p>
-          </div>
-          <div className="feature">
-            <h3>🧹 Soft Delete</h3>
-            <p>Safe deletion with recovery option</p>
-          </div>
+                
+                {user.role === 'admin' && (
+                  <div className="card">
+                    <h4>User Management</h4>
+                    <p>View and manage users with different access levels.</p>
+                    <Link to="/users" className="btn btn-primary">
+                      Manage Users
+                    </Link>
+                  </div>
+                )}
+                
+                <div className="card">
+                  <h4>API Documentation</h4>
+                  <p>View the API documentation and endpoints.</p>
+                  <a 
+                    href="https://github.com/saadamir1/nestjs-pg-crud" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="btn btn-outline-primary"
+                  >
+                    View Docs
+                  </a>
+                </div>
+              </div>
+              
+              <div className="card-header">
+                <h3>Recent Activity</h3>
+              </div>
+              
+              <div className="recent-activity">
+                {activityItems.map((item) => (
+                  <div key={item.id} className="activity-item">
+                    <div className="activity-header">
+                      <span className="activity-title">{item.title}</span>
+                      <span className="activity-date">{formatDate(item.date)}</span>
+                    </div>
+                    <p>{item.description}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 
