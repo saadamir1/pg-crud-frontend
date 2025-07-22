@@ -1,36 +1,58 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { authService } from '../services/api';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // Clear any error messages after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const response = await authService.getProfile();
+      setUser(response.data);
+      return response.data;
+    } catch (err) {
+      console.error('Failed to fetch user profile:', err);
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      setUser(null);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     // Check if user is logged in on page load
     const checkLoggedIn = async () => {
+      setLoading(true);
       const token = localStorage.getItem('accessToken');
+      
       if (token) {
-        try {
-          const response = await authService.getProfile();
-          setCurrentUser(response.data);
-        } catch (err) {
-          console.error('Failed to fetch user profile:', err);
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-        }
+        await fetchUserProfile();
       }
+      
       setLoading(false);
+      setAuthChecked(true);
     };
 
     checkLoggedIn();
-  }, []);
+  }, [fetchUserProfile]);
 
   const login = async (email, password) => {
     try {
       setError(null);
+      setLoading(true);
+      
       const response = await authService.login(email, password);
       const { access_token, refresh_token } = response.data;
       
@@ -38,40 +60,66 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('refreshToken', refresh_token);
       
       // Fetch user profile after login
-      const userResponse = await authService.getProfile();
-      setCurrentUser(userResponse.data);
-      return true;
+      const userData = await fetchUserProfile();
+      setLoading(false);
+      return !!userData;
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setLoading(false);
+      const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
+      setError(errorMessage);
       return false;
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    setCurrentUser(null);
-  };
+    setUser(null);
+    // Don't remove remembered email as that's a user preference
+  }, []);
 
   const register = async (userData) => {
     try {
       setError(null);
+      setLoading(true);
       await authService.register(userData);
+      setLoading(false);
       return true;
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setLoading(false);
+      const errorMessage = err.response?.data?.message || 'Registration failed. Please try again.';
+      setError(errorMessage);
+      return false;
+    }
+  };
+  
+  const updateProfile = async (userData) => {
+    try {
+      setError(null);
+      setLoading(true);
+      // This would need to be implemented in your API service
+      // const response = await userService.updateProfile(userData);
+      // setUser(response.data);
+      setLoading(false);
+      return true;
+    } catch (err) {
+      setLoading(false);
+      setError(err.response?.data?.message || 'Failed to update profile');
       return false;
     }
   };
 
   const value = {
-    currentUser,
+    user,
     loading,
     error,
+    authChecked,
     login,
     logout,
     register,
-    isAdmin: currentUser?.role === 'admin',
+    updateProfile,
+    setError,
+    isAdmin: user?.role === 'admin',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
