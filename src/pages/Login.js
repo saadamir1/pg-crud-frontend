@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -15,13 +15,13 @@ const Login = () => {
   useEffect(() => {
     // If user is already logged in, redirect to home
     if (user) {
-      navigate('/');
+      navigate("/");
     }
-    
+
     // Check for saved email
-    const savedEmail = localStorage.getItem('rememberedEmail');
+    const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
-      setFormData(prev => ({ ...prev, email: savedEmail }));
+      setFormData((prev) => ({ ...prev, email: savedEmail }));
       setRememberMe(true);
     }
   }, [user, navigate]);
@@ -34,19 +34,19 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     // Handle remember me
     if (rememberMe) {
-      localStorage.setItem('rememberedEmail', formData.email);
+      localStorage.setItem("rememberedEmail", formData.email);
     } else {
-      localStorage.removeItem('rememberedEmail');
+      localStorage.removeItem("rememberedEmail");
     }
-    
+
     const success = await login(formData.email, formData.password);
-    
+
     setIsLoading(false);
     if (success) {
-      navigate('/');
+      navigate("/");
     }
   };
 
@@ -54,12 +54,18 @@ const Login = () => {
     <div className="auth-container">
       <div className="auth-card">
         <h2>Welcome Back</h2>
-        <p style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--gray-color)' }}>
+        <p
+          style={{
+            textAlign: "center",
+            marginBottom: "1.5rem",
+            color: "var(--gray-color)",
+          }}
+        >
           Sign in to your account to continue
         </p>
-        
+
         {error && <div className="error-message">{error}</div>}
-        
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
@@ -74,7 +80,7 @@ const Login = () => {
               autoFocus
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <input
@@ -87,47 +93,66 @@ const Login = () => {
               required
             />
           </div>
-          
-          <div className="form-group" style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
+
+          <div
+            className="form-group"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "1.5rem",
+            }}
+          >
             <input
               type="checkbox"
               id="rememberMe"
               checked={rememberMe}
               onChange={() => setRememberMe(!rememberMe)}
-              style={{ width: 'auto', marginRight: '0.5rem' }}
+              style={{ width: "auto", marginRight: "0.5rem" }}
             />
-            <label htmlFor="rememberMe" style={{ display: 'inline', marginBottom: 0 }}>
+            <label
+              htmlFor="rememberMe"
+              style={{ display: "inline", marginBottom: 0 }}
+            >
               Remember me
             </label>
           </div>
-          
-          <button 
-            type="submit" 
-            disabled={isLoading} 
+
+          <button
+            type="submit"
+            disabled={isLoading}
             className="btn btn-primary"
-            style={{ width: '100%', padding: '0.75rem' }}
+            style={{ width: "100%", padding: "0.75rem" }}
           >
             {isLoading ? (
               <>
-                <span className="loader" style={{ 
-                  width: '20px', 
-                  height: '20px', 
-                  border: '2px solid rgba(255,255,255,0.3)', 
-                  borderTopColor: 'white',
-                  display: 'inline-block',
-                  marginRight: '0.5rem',
-                  verticalAlign: 'middle'
-                }}></span>
+                <span
+                  className="loader"
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    border: "2px solid rgba(255,255,255,0.3)",
+                    borderTopColor: "white",
+                    display: "inline-block",
+                    marginRight: "0.5rem",
+                    verticalAlign: "middle",
+                  }}
+                ></span>
                 Signing in...
               </>
-            ) : 'Sign In'}
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
-        
+
         <div className="auth-footer">
           <p>Demo credentials:</p>
-          <p><strong>Admin:</strong> admin@example.com / password</p>
-          <p><strong>User:</strong> user@example.com / password</p>
+          <p>
+            <strong>Admin:</strong> admin@example.com / password
+          </p>
+          <p>
+            <strong>User:</strong> user@example.com / password
+          </p>
         </div>
       </div>
     </div>
