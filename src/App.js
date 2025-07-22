@@ -1,20 +1,24 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Cities from './pages/Cities';
-import Users from './pages/Users';
+import Layout from './components/Layout';
+import Loader from './components/Loader';
+
+// Lazy load pages for better performance
+const Home = React.lazy(() => import('./pages/Home'));
+const Login = React.lazy(() => import('./pages/Login'));
+const Cities = React.lazy(() => import('./pages/Cities'));
+const Users = React.lazy(() => import('./pages/Users'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
 
 function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="app">
-          <Navbar />
-          <div className="container">
+        <Suspense fallback={<Loader />}>
+          <Layout>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
@@ -34,9 +38,11 @@ function App() {
                   </PrivateRoute>
                 } 
               />
+              <Route path="/404" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
-          </div>
-        </div>
+          </Layout>
+        </Suspense>
       </AuthProvider>
     </Router>
   );
