@@ -65,7 +65,22 @@ export const AuthProvider = ({ children }) => {
       return !!userData;
     } catch (err) {
       setLoading(false);
-      const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials.';
+      
+      // Better error handling
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (err.code === 'NETWORK_ERROR' || err.message === 'Network Error') {
+        errorMessage = 'Server is currently unavailable. Please try again in a few minutes.';
+      } else if (err.response?.status === 502 || err.response?.status === 503) {
+        errorMessage = 'Server is temporarily down. Please try again later.';
+      } else if (err.response?.status === 401) {
+        errorMessage = err.response?.data?.message || 'Invalid email or password.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
       setError(errorMessage);
       return false;
     }
