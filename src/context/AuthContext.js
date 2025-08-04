@@ -124,6 +124,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUser = useCallback(async () => {
+    if (user) {
+      await fetchUserProfile();
+    }
+  }, [user, fetchUserProfile]);
+
   const value = {
     user,
     loading,
@@ -133,6 +139,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     register,
     updateProfile,
+    refreshUser,
     setError,
     isAdmin: user?.role === 'admin',
   };
