@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { cityService, userService } from '../services/api';
+import api from '../services/api';
 
 const Home = () => {
   const { user } = useAuth();
@@ -9,13 +10,40 @@ const Home = () => {
     cities: 0,
     users: 0,
   });
+  const [apiStatus, setApiStatus] = useState({
+    status: 'checking',
+    message: 'Checking...',
+    color: '#f39c12'
+  });
   const [loading, setLoading] = useState(true);
   
+  // Check API health status
+  const checkApiStatus = async () => {
+    try {
+      const response = await api.get('/');
+      setApiStatus({
+        status: 'online',
+        message: 'Online',
+        color: '#2ecc71'
+      });
+    } catch (error) {
+      setApiStatus({
+        status: 'offline',
+        message: 'Offline',
+        color: '#e74c3c'
+      });
+    }
+  };
+
   useEffect(() => {
     const fetchStats = async () => {
       if (user) {
         try {
           setLoading(true);
+          
+          // Check API status
+          await checkApiStatus();
+          
           const citiesResponse = await cityService.getAllCities(1, 1);
           
           let usersCount = 0;
@@ -30,13 +58,23 @@ const Home = () => {
           });
         } catch (error) {
           console.error('Error fetching stats:', error);
+          // If stats fetch fails, still check API status
+          await checkApiStatus();
         } finally {
           setLoading(false);
         }
+      } else {
+        // Check API status even when not logged in
+        await checkApiStatus();
       }
     };
     
     fetchStats();
+    
+    // Check API status every 30 seconds
+    const interval = setInterval(checkApiStatus, 30000);
+    
+    return () => clearInterval(interval);
   }, [user]);
   
   // Format date for activity items
@@ -110,8 +148,12 @@ const Home = () => {
                 
                 <div className="stat-card">
                   <h3>API Status</h3>
-                  <div className="stat-value" style={{ color: '#2ecc71', fontSize: '1.5rem' }}>Online</div>
-                  <div className="stat-change">100% uptime</div>
+                  <div className="stat-value" style={{ color: apiStatus.color, fontSize: '1.5rem' }}>
+                    {apiStatus.message}
+                  </div>
+                  <div className="stat-change">
+                    {apiStatus.status === 'online' ? '✓ Connected' : '✗ Disconnected'}
+                  </div>
                 </div>
               </div>
               
