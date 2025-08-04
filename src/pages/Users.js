@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { userService, authService } from '../services/api';
+import { userService, authService, uploadService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { isAdmin } = useAuth();
+  const [success, setSuccess] = useState('');
+  const { isAdmin, refreshUser } = useAuth();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -64,11 +65,32 @@ const Users = () => {
     }
   };
 
+  const handleProfilePictureUpload = async (userId, file) => {
+    if (!file) return;
+    
+    try {
+      setError(null);
+      await uploadService.uploadProfilePicture(userId, file);
+      setSuccess('Profile picture uploaded successfully!');
+      fetchUsers(); // Refresh to show new image
+      
+      // Refresh user context if current user's profile was updated
+      await refreshUser();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError('Failed to upload profile picture');
+      console.error(err);
+    }
+  };
+
   return (
     <div className="users-container">
       <h2>Users Management</h2>
       
       {error && <div className="error-message">{error}</div>}
+      {success && <div className="success-message">{success}</div>}
       
       <div className="user-form-container">
         <h3>Add New User</h3>
@@ -152,19 +174,64 @@ const Users = () => {
             <table>
               <thead>
                 <tr>
+                  <th>Profile</th>
                   <th>ID</th>
                   <th>Email</th>
                   <th>Name</th>
                   <th>Role</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
                   <tr key={user.id}>
+                    <td>
+                      {user?.profilePicture ? (
+                        <img 
+                          src={user.profilePicture} 
+                          alt={`${user?.firstName || ''} ${user?.lastName || ''}`}
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            objectFit: 'cover'
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          backgroundColor: '#e0e0e0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          color: '#666'
+                        }}>
+                          {user.firstName?.charAt(0) || ''}{user.lastName?.charAt(0) || ''}
+                        </div>
+                      )}
+                    </td>
                     <td>{user.id}</td>
                     <td>{user.email}</td>
-                    <td>{`${user.firstName} ${user.lastName}`}</td>
+                    <td>{`${user?.firstName || ''} ${user?.lastName || ''}`}</td>
                     <td>{user.role}</td>
+                    <td>
+                      <label className="btn btn-sm btn-outline-primary" style={{ cursor: 'pointer' }}>
+                        📷 Upload
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={(e) => handleProfilePictureUpload(user.id, e.target.files[0])}
+                        />
+                      </label>
+                    </td>
                   </tr>
                 ))}
               </tbody>
