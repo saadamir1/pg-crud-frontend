@@ -59,11 +59,47 @@ const Navbar = () => {
               </div>
 
               <div className="user-menu">
-                <div className="user-info">
-                  <span className="user-name">
-                    {user.firstName} {user.lastName}
-                  </span>
-                  <span className="user-role">{user.role}</span>
+                <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {user?.profilePicture ? (
+                    <img 
+                      src={user.profilePicture} 
+                      alt={`${user?.firstName || ''} ${user?.lastName || ''}`}
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '2px solid rgba(255,255,255,0.2)'
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(255,255,255,0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#fff',
+                      border: '2px solid rgba(255,255,255,0.2)'
+                    }}>
+                      {user.firstName?.charAt(0) || ''}{user.lastName?.charAt(0) || ''}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                    <span className="user-name" style={{ fontSize: '14px', fontWeight: '500', lineHeight: '1.2' }}>
+                      {user?.firstName || ''} {user?.lastName || ''}
+                    </span>
+                    <span className="user-role" style={{ fontSize: '12px', opacity: '0.8', textTransform: 'capitalize', lineHeight: '1.2' }}>
+                      {user?.role || ''}
+                    </span>
+                  </div>
                 </div>
                 <button onClick={logout} className="btn btn-logout">
                   Logout
