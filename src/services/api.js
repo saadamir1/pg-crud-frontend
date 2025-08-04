@@ -94,4 +94,36 @@ export const cityService = {
   deleteCity: (id) => api.delete(`/cities/${id}`),
 };
 
+// Upload services
+export const uploadService = {
+  uploadImage: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/upload/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  uploadAvatar: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/upload/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  uploadProfilePicture: (userId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/upload/profile-picture/${userId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  uploadCityImage: (cityId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/upload/city-image/${cityId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+};
+
 export default api;
