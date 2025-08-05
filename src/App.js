@@ -9,6 +9,7 @@ import Loader from './components/Loader';
 // Lazy load pages for better performance
 const Home = React.lazy(() => import('./pages/Home'));
 const Login = React.lazy(() => import('./pages/Login'));
+const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
 const Cities = React.lazy(() => import('./pages/Cities'));
 const Users = React.lazy(() => import('./pages/Users'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
@@ -22,6 +23,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route 
                 path="/cities" 
                 element={
