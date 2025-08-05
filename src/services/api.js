@@ -73,6 +73,8 @@ export const authService = {
   register: (userData) => api.post('/auth/register', userData),
   getProfile: () => api.get('/auth/me'),
   refreshToken: (refreshToken) => api.post('/auth/refresh', { refreshToken }),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token, newPassword) => api.post('/auth/reset-password', { token, newPassword }),
 };
 
 // User services
