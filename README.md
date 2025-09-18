@@ -21,7 +21,7 @@ A React frontend application for the NestJS PostgreSQL CRUD API.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/pg-crud-frontend.git
+git clone https://github.com/saadamir1/pg-crud-frontend.git
 cd pg-crud-frontend
 ```
 
